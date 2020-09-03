@@ -9,6 +9,7 @@ import MarkoPlaceholder from "./placeholder";
 import MarkoComment from "./comment";
 import MarkoScriptlet from "./scriptlet";
 import MarkoClass from "./class";
+import { visitor as analyze } from "./analyze";
 import { visitor as optimize } from "./optimize";
 import getComponentFiles from "./util/get-component-files";
 
@@ -47,6 +48,9 @@ export const visitor = {
         });
 
       file._renderBlock = renderBlock;
+
+      // Pre-Analyze tree
+      if (file._markoOptions.output === "dom") path.traverse(analyze);
     },
     exit(path) {
       const {
