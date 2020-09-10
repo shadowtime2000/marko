@@ -25,12 +25,9 @@ export const visitor = {
       }
 
       // check attributes
-      const attributes = path.get("attributes");
-      const attrNames = Object.keys(attributes);
       isStatic =
         isStatic &&
-        attrNames.every(attrName => {
-          const attr = attributes[attrName];
+        path.get("attributes").every(attr => {
           const value = attr.node.value;
           const literal =
             t.isStringLiteral(value) ||
