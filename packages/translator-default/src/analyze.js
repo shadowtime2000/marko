@@ -1,6 +1,5 @@
 import { types as t } from "@marko/babel-types";
 import { isNativeTag } from "@marko/babel-utils";
-import { isBooleanLiteral } from "@marko/babel-types/src/definitions";
 
 export const staticNodes = new WeakSet();
 
@@ -36,7 +35,7 @@ export const visitor = {
           const literal =
             t.isStringLiteral(value) ||
             t.isNumericLiteral(value) ||
-            isBooleanLiteral(value);
+            t.isBooleanLiteral(value);
           return literal && !attr.node.arguments && !attr.node.modifier;
         });
 
