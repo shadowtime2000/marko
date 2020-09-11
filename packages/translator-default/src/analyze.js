@@ -1,5 +1,5 @@
 import { types as t } from "@marko/babel-types";
-import { isNativeTag } from "@marko/babel-utils";
+import { isNativeTag, getTagDef } from "@marko/babel-utils";
 
 export const staticNodes = new WeakSet();
 
@@ -12,28 +12,33 @@ export const visitor = {
     if (confident && path.node.escape) staticNodes.add(path.node);
   },
   MarkoTag: {
+    enter(path) {
+      // check if a for
+      // needed to handle global keys on elements that don't have specific key attributes
+      if (path.node.name.value === "for") path.skip();
+    },
     exit(path) {
       // check name
       let isStatic =
         isNativeTag(path) && !path.node.params && !path.node.arguments;
 
-      // check if parent is a for
-      // needed to handle global keys on elements that don't have specific key attributes
-      const parent = path.parentPath.parentPath.node;
-      if (isStatic && t.isMarkoTag(parent) && parent.name.value === "for") {
-        isStatic = false;
-      }
+      const tagDef = getTagDef(path);
+      isStatic = isStatic && !tagDef.codeGeneratorModulePath;
 
       // check attributes
       isStatic =
         isStatic &&
         path.get("attributes").every(attr => {
-          const value = attr.node.value;
-          const literal =
-            t.isStringLiteral(value) ||
-            t.isNumericLiteral(value) ||
-            t.isBooleanLiteral(value);
-          return literal && !attr.node.arguments && !attr.node.modifier;
+          if (!t.isMarkoAttribute(attr)) return false;
+          const attrValue = attr.get("value");
+          const { confident } = attrValue.evaluate();
+          const exclude =
+            t.isObjectExpression(attrValue) ||
+            t.isArrayExpression(attrValue) ||
+            t.isRegExpLiteral(attrValue);
+          return (
+            confident && !exclude && !attr.node.arguments && !attr.node.modifier
+          );
         });
 
       // check children

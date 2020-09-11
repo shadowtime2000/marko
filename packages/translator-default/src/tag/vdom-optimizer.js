@@ -1,5 +1,6 @@
 import { decode } from "he";
 import { types as t } from "@marko/babel-types";
+import { getKeyManager } from "../util/key-manager";
 import write from "../util/vdom-out-write";
 import { tagArguments } from "./native-tag[vdom]";
 
@@ -27,12 +28,14 @@ export default function VDOMOptimizer(path) {
       ]);
     },
     MarkoPlaceholder(path) {
-      const { node } = path;
+      const { value } = path.get("value").evaluate();
       create = t.callExpression(t.memberExpression(create, t.identifier("t")), [
-        node.value
+        t.stringLiteral(value != null ? value.toString() : "")
       ]);
     },
     MarkoTag(path) {
+      if (path.node.attributes.find(a => a.name === "key"))
+        getKeyManager(path).resolveKey(path);
       const writeArgs = tagArguments(path, true);
       create = t.callExpression(
         t.memberExpression(create, t.identifier("e")),

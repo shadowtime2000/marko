@@ -50,7 +50,7 @@ export const visitor = {
       file._renderBlock = renderBlock;
 
       // Pre-Analyze tree
-      if (file._markoOptions.output === "dom") path.traverse(analyze);
+      if (file._markoOptions.output !== "html") path.traverse(analyze);
     },
     exit(path) {
       const {
