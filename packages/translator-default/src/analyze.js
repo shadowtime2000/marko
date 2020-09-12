@@ -8,8 +8,10 @@ export const visitor = {
     staticNodes.add(path.node);
   },
   MarkoPlaceholder(path) {
-    const { confident } = path.get("value").evaluate();
-    if (confident && path.node.escape) staticNodes.add(path.node);
+    if (path.node.escape) {
+      const { confident } = path.get("value").evaluate();
+      if (confident) staticNodes.add(path.node);
+    }
   },
   MarkoTag: {
     enter(path) {
@@ -29,16 +31,20 @@ export const visitor = {
       isStatic =
         isStatic &&
         path.get("attributes").every(attr => {
-          if (!t.isMarkoAttribute(attr)) return false;
+          if (
+            !t.isMarkoAttribute(attr) ||
+            attr.node.arguments ||
+            attr.node.modifier
+          )
+            return false;
           const attrValue = attr.get("value");
-          const { confident } = attrValue.evaluate();
           const exclude =
             t.isObjectExpression(attrValue) ||
             t.isArrayExpression(attrValue) ||
             t.isRegExpLiteral(attrValue);
-          return (
-            confident && !exclude && !attr.node.arguments && !attr.node.modifier
-          );
+          if (exclude) return false;
+          const { confident } = attrValue.evaluate();
+          return confident;
         });
 
       // check children
