@@ -1,5 +1,5 @@
 import { types as t } from "@marko/babel-types";
-import { isNativeTag, getTagDef } from "@marko/babel-utils";
+import { isNativeTag, getTagDef, isLoopTag } from "@marko/babel-utils";
 
 export const staticNodes = new WeakSet();
 
@@ -15,9 +15,8 @@ export const visitor = {
   },
   MarkoTag: {
     enter(path) {
-      // check if a for
       // needed to handle global keys on elements that don't have specific key attributes
-      if (path.node.name.value === "for") path.skip();
+      if (isLoopTag(path)) path.skip();
     },
     exit(path) {
       // check name
@@ -37,6 +36,7 @@ export const visitor = {
             attr.node.modifier
           )
             return false;
+
           const attrValue = attr.get("value");
           const exclude =
             t.isObjectExpression(attrValue) ||
