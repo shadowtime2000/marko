@@ -14,12 +14,14 @@ export function configure(newConfig = {}) {
 export async function compile(src, filename, options) {
   const babelConfig = loadBabelConfig(filename, options);
   const babelResult = await transformAsync(src, babelConfig);
+  scheduleDefaultCacheClear(options);
   return buildResult(babelResult);
 }
 
 export function compileSync(src, filename, options) {
   const babelConfig = loadBabelConfig(filename, options);
   const babelResult = transformSync(src, babelConfig);
+  scheduleDefaultCacheClear(options);
   return buildResult(babelResult);
 }
 
@@ -74,4 +76,22 @@ function buildResult(babelResult) {
     metadata: { marko: meta }
   } = babelResult;
   return { map, code, meta };
+}
+
+// TODO clear default cached fs as well
+let clearingDefaultCache = false;
+function scheduleDefaultCacheClear(options) {
+  if (
+    !clearingDefaultCache &&
+    globalConfig.cache &&
+    (!options.cache || options.cache === globalConfig.cache)
+  ) {
+    clearingDefaultCache = true;
+    setImmediate(clearDefaultCache);
+  }
+}
+
+function clearDefaultCache() {
+  globalConfig.cache.clear();
+  clearingDefaultCache = false;
 }

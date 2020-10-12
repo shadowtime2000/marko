@@ -14,7 +14,7 @@ if (globalThis[MARKO_CONFIG_KEY]) {
 
     /**
      * Whether the version should be written to the template as a comment e.g.
-     * // Compiled using marko@4.0.0 - DO NOT EDIT
+     * // Compiled using marko@x.x.x - DO NOT EDIT
      */
     writeVersionComment: true,
 
@@ -47,7 +47,7 @@ if (globalThis[MARKO_CONFIG_KEY]) {
     /**
      * Use a different file system object, eg webpacks CachedInputFileSystem or lasso-caching-fs
      */
-    fileSystem: fs,
+    fileSystem: fs, // TODO: should use lasso-caching-fs by default cleared on macrotasks like the cache key 
     /**
      * By default Marko 5 outputs esm, you can optionally specify commonjs.
      *
@@ -59,7 +59,17 @@ if (globalThis[MARKO_CONFIG_KEY]) {
      * Enables production mode optimizations if true, or not if false.
      * If left as undefined checks for env === "production".
      */
-    optimize: undefined
+    optimize: undefined,
+
+    /**
+     * Compiling a Marko template may require other (used) Marko templates to compile.
+     * To prevent compiling templates more than once, most of the compilation is cached.
+     * 
+     * The default cache strategy is to clear the cache on every macrotask.
+     * If the default cache is overwritten it is up to the user to determine when the
+     * cache is cleared.
+     */
+    cache: new Map()
   };
 
   if (process.env.MARKO_CONFIG) {
